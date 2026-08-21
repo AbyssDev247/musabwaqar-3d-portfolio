@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { BANKAI_SCENES, EXPERIENCE, PROFILE, PROJECTS, TECH, type BankaiScene } from './data/bankaiScenes';
 
@@ -119,19 +119,8 @@ export default function AnimeBankaiPortfolio() {
     const accentLight = new THREE.PointLight(current.accent, 8, 18); accentLight.position.set(2, 1, 4); scene.add(accentLight);
     const world = new THREE.Group(); scene.add(world);
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60, 48, 48), new THREE.MeshStandardMaterial({ color: 0x020408, roughness: 0.9, metalness: 0.08, wireframe: true, transparent: true, opacity: 0.22 }));
-    floor.rotation.x = -Math.PI / 2; floor.position.y = -3.2; world.add(floor);
-    const city = new THREE.Group();
-    const buildingMaterial = new THREE.MeshBasicMaterial({ color: 0x16202a, wireframe: true, transparent: true, opacity: 0.38 });
-    for (let i = 0; i < 38; i++) { const h = 0.4 + Math.random() * 5; const b = new THREE.Mesh(new THREE.BoxGeometry(0.25 + Math.random() * 0.7, h, 0.25 + Math.random() * 0.7), buildingMaterial); b.position.set((Math.random() - 0.5) * 28, -3.05 + h / 2, -7 - Math.random() * 38); city.add(b); }
-    world.add(city);
-
-    const starsGeometry = new THREE.BufferGeometry();
-    const starPositions = new Float32Array(620 * 3);
-    for (let i = 0; i < 620; i++) { starPositions[i * 3] = (Math.random() - 0.5) * 42; starPositions[i * 3 + 1] = (Math.random() - 0.5) * 24; starPositions[i * 3 + 2] = -Math.random() * 62; }
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const stars = new THREE.Points(starsGeometry, new THREE.PointsMaterial({ color: 0xdde8ff, size: 0.018, transparent: true, opacity: 0.56 })); scene.add(stars);
-
+    // Keep this WebGL world dedicated to the scroll-driven Bankai forms.
+    // The old floor/city/star background has been removed; BankaiInstancedBackground owns the background layer.
     const visuals = BANKAI_SCENES.map((bankai) => { const visual = makeVisual(bankai, quality); world.add(visual); return visual; });
 
     const onScroll = () => {
@@ -160,8 +149,6 @@ export default function AnimeBankaiPortfolio() {
       camera.position.z += (9.5 - Math.abs(local) * 0.9 - camera.position.z) * 0.045;
       world.rotation.y += (smoothMouse.current.x * 0.055 - world.rotation.y) * 0.035;
       world.rotation.x += (-smoothMouse.current.y * 0.025 - world.rotation.x) * 0.035;
-      city.position.x += (-smoothMouse.current.x * 0.35 - city.position.x) * 0.03;
-      stars.position.x += (-smoothMouse.current.x * 0.15 - stars.position.x) * 0.025;
 
       visuals.forEach((visual, i) => {
         const d = i - t;
