@@ -76,14 +76,16 @@ export default function BankaiInstancedBackground() {
       for (let y = 0; y < density; y++) {
         for (let x = 0; x < density; x++) {
           const id = z * density * density + y * density + x;
+          const instance = instances[id];
+          if (!instance) continue;
           const depthOffset = (z - 1) * 3.2;
-          instances[id].x = (x - center) * (spreadX / density);
-          instances[id].y = (y - center) * (spreadY / density);
-          instances[id].z = depthOffset;
-          instances[id].scale = 0.35 + ((x + y + z) % 3) * 0.12;
-          instances[id].rotateX = (x - center) * 4;
-          instances[id].rotateY = (y - center) * 5;
-          instances[id].color = palette[id % palette.length];
+          instance.x = (x - center) * (spreadX / density);
+          instance.y = (y - center) * (spreadY / density);
+          instance.z = depthOffset;
+          instance.scale = 0.35 + ((x + y + z) % 3) * 0.12;
+          instance.rotateX = (x - center) * 4;
+          instance.rotateY = (y - center) * 5;
+          instance.color = palette[id % palette.length];
         }
       }
     }
@@ -130,7 +132,7 @@ export default function BankaiInstancedBackground() {
       geometry.dispose();
       material.dispose();
       renderer.dispose();
-      root.removeChild(renderer.domElement);
+      if (renderer.domElement.parentElement === root) root.removeChild(renderer.domElement);
     };
   }, []);
 
