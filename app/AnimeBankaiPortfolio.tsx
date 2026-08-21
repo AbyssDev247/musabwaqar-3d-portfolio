@@ -2,65 +2,285 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { BANKAI_SCENES, EXPERIENCE, PROFILE, PROJECTS, TECH, type BankaiScene } from './data/bankaiScenes';
 
-type Bankai={name:string;user:string;section:string;command:string;purpose:string;ability:string;accent:number;hex:string;mode:string;projects:string[]};
-const BANKAIS:Bankai[]=[
-['TENSA ZANGETSU','ICHIGO KUROSAKI','SPEED & POWER','BANKAI: TENSA ZANGETSU','Fast systems. Focused execution. High-performance engineering.','Compressed reiatsu becomes velocity, durability and destructive output.',0xff6b00,'#ff6b00','tensa',['Real-time systems','WebGL performance engine','Lightning-fast API work']],
-['TRUE BANKAI','ICHIGO KUROSAKI','HYBRID INTELLIGENCE','TRUE BANKAI // HYBRID SOUL','Full-stack systems connecting AI, backend infrastructure and interfaces.','Black and white power merge into one adaptive architecture.',0xc8b8ff,'#c8b8ff','hybrid',['AI + backend integration','RAG applications','Distributed LLM experiments']],
-['ZANKA NO TACHI','GENRYŪSAI YAMAMOTO','LEGACY & FIRE','BANKAI: ZANKA NO TACHI','Systems, research and lessons designed to survive the moment.','Four directional powers become one concentrated destructive edge.',0xff4b21,'#ff4b21','fire',['Research systems','Infrastructure / security work','Long-lived engineering lessons']],
-['KATEN KYŌKOTSU: KARAMATSU SHINJŪ','SHUNSUI KYŌRAKU','STORIES & CASE STUDIES','BANKAI: KATEN KYŌKOTSU: KARAMATSU SHINJŪ','Every project has a constraint, conflict, decision and outcome.','A four-act narrative turns technical problems into readable stories.',0x9b7dff,'#9b7dff','story',['Technical case studies','Failure → lesson → redesign','Team and client stories']],
-['SENBONZAKURA KAGEYOSHI','BYAKUYA KUCHIKI','PRECISION & ELEGANCE','BANKAI: SENBONZAKURA KAGEYOSHI','Clean architecture, deliberate abstractions and measurable quality.','Countless fragments become one precise system.',0xff8fd5,'#ff8fd5','petals',['Clean architecture','Test-focused development','Scalable project design']],
-['DAIGUREN HYŌRINMARU','TŌSHIRŌ HITSUGAYA','TIME & OPTIMIZATION','BANKAI: DAIGUREN HYŌRINMARU','Deadlines become visible systems: scope, time, risk and delivery.','Ice petals track the remaining window until mastery arrives.',0x72d9ff,'#72d9ff','ice',['Sprint planning','Performance optimization','Learning roadmaps']],
-['KONJIKI ASHISOGI JIZŌ','MAYURI KUROTSUCHI','EXPERIMENTAL TECH','BANKAI: KONJIKI ASHISOGI JIZŌ','Research, prototypes and strange ideas that become useful tools.','A customizable counter is generated for the problem in front of it.',0xd7ff3f,'#d7ff3f','poison',['Novel graph tooling','Custom algorithms','Experimental AI frameworks']],
-['MINAZUKI','RETSU UNOHANA','REPAIR & RESILIENCE','BANKAI: MINAZUKI','Infrastructure that can recover, monitor itself and keep serving.','Damage and healing coexist in a continuous reliability loop.',0x76ffb1,'#76ffb1','acid',['Disaster recovery','Automated backups','Health monitoring / self-healing']],
-['KOKUJŌ TENGEN MYŌŌ','SAJIN KOMAMURA','LARGE-SCALE SYSTEMS','BANKAI: KOKUJŌ TENGEN MYŌŌ','Distributed architecture and enterprise reliability beyond one machine.','A colossal guardian mirrors the scale of the system.',0xff3030,'#ff3030','giant',['Distributed recovery','Global load balancing','Cross-datacenter replication']],
-['KAMISHINI NO YARI','GIN ICHIMARU','LONG-RANGE IMPACT','BANKAI: KAMISHINI NO YARI','A small interface can move a huge distributed system.','A blade stretches across distance at extreme speed.',0xe8f8ff,'#e8f8ff','spear',['gRPC services','Message queues','Distributed databases']],
-['SUZUMUSHI TSUISHIKI: ENMA KŌRO','KANAME TŌSEN','SENSORY ANALYTICS','BANKAI: SUZUMUSHI TSUISHIKI: ENMA KŌRO','Remove noise until the signal is impossible to miss.','A black field suppresses everything except the insight.',0x6578ff,'#6578ff','void',['Pattern recognition','Data mining','Model explainability']],
-['KINSHARA BUTŌDAN','RŌJŪRŌ “ROSE” ŌTORIBASHI','CREATIVE DIRECTION','BANKAI: KINSHARA BUTŌDAN','Design systems, interaction, motion and interfaces that communicate.','Music becomes illusion; design becomes an experience.',0xffcf6b,'#ffcf6b','gold',['Design systems','Motion libraries','Interactive visual work']],
-['TEKKEN TACHIKAZE','KENSEI MUGURUMA','RAW PERFORMANCE','BANKAI: TEKKEN TACHIKAZE','Benchmarking, profiling and ruthless removal of bottlenecks.','Continuous contact means continuous concussive force.',0xff5a3d,'#ff5a3d','force',['Algorithm optimization','Benchmark suites','Runtime tuning']],
-['SŌŌ ZABIMARU','RENJI ABARAI','GROWTH TRAJECTORY','BANKAI: SŌŌ ZABIMARU','Skills accumulate through projects, experiments and mentorship.','A skeletal serpent grows with every completed milestone.',0xb979ff,'#b979ff','snake',['Career progression','Mentorship','Learning outcomes']],
-['RYŪMON HŌZŌKUMARU','IKKAKU MADARAME','COMPOUNDING EFFORT','BANKAI: RYŪMON HŌZŌKUMARU','Long projects reward patience and accumulated effort.','A crest fills until one decisive strike is possible.',0xe74343,'#e74343','dragon',['Long-term initiatives','Compounding learning','Year-scale goals']],
-['KŌŌ MONSHŌ','CHŌJIRŌ SASAKIBE','LEADERSHIP','BANKAI: KŌŌ MONSHŌ','Architecture is coordination: people, responsibilities and decisions.','Lightning creates a visible hierarchy of roles and dependencies.',0xffe45c,'#ffe45c','lightning',['Team projects','Delegation','Strategic planning']],
-['HAKKA NO TOGAME','RUKIA KUCHIKI','SACRIFICE & PERFECTION','BANKAI: HAKKA NO TOGAME','Some breakthroughs require removing what no longer belongs.','Absolute cold freezes the environment and forces a deliberate reset.',0xdffaff,'#dffaff','white',['Difficult technical decisions','Course corrections','Focused simplification']],
-['KANNONBIRAKI BENIHIME ARATAME','KISUKE URAHARA','RESTRUCTURE & FIX','BANKAI: KANNONBIRAKI BENIHIME ARATAME','Debugging means opening the system and rebuilding the right part.','Anything in range can be split, restructured and stitched together.',0xff7652,'#ff7652','repair',['Debugging','Architectural refactoring','System redesign']],
-['SAKAHADĒ','SHINJI HIRAKO','PERSPECTIVE SHIFT','INVERSION // CAN’T FEAR YOUR OWN WORLD','Invert assumptions. Reframe the problem.','Perspective itself becomes the weapon.',0xffc45c,'#ffc45c','invert',['Unconventional approaches','Blue-sky thinking','Paradigm shifts']],
-['SHINKA HAKKŌ KEN','NANAO ISE / SHUNSUI KYŌRAKU','SECURITY & PROTECTION','DIVINE EIGHT MIRROR SWORD','Good systems defend users, data and invariants.','A mirror absorbs hostile force and reflects it back.',0xbdeeff,'#bdeeff','mirror',['Cybersecurity','Encryption','Defensive architecture']],
-['UNNAMED BANKAI','KENPACHI ZARAKI','RAW IMPACT','BANKAI // UNTAMED','Ambitious work that changes the game.','Pure destructive output with no concern for elegance.',0xff1738,'#ff1738','berserk',['Breakthrough builds','Highest-impact work','Game-changing experiments']],
-['RESURRECCIÓN // FINAL PORTAL','MUSAB WAQAR','CONTACT & NEXT ARC','FINAL FORM: OPEN THE GATE','A portfolio is a doorway. The next system can be built together.','The Bankai archive collapses into a single portal.',0xffd166,'#ffd166','final',['Research collaboration','FYP / engineering collaboration','International MS / research opportunities']]
-].map(x=>({name:x[0] as string,user:x[1] as string,section:x[2] as string,command:x[3] as string,purpose:x[4] as string,ability:x[5] as string,accent:x[6] as number,hex:x[7] as string,mode:x[8] as string,projects:x[9] as string[]}));
-const profile={name:'Musab Waqar',role:'Co-Founder & CTO @ NanoCoders',university:'BS Computer Science · FAST NUCES Peshawar',graduation:'June 2027',motto:'Foundation → Mechanism → Implementation → Optimization → Real-world usage'};
-const tech=['C','C++','Python','TypeScript','React','Next.js','Docker','Apache Kafka','Spark','PySpark','Hadoop','NLP','RAG','Neo4j','Apache AGE','PostgreSQL','Databricks','Linux'];
+const ids = BANKAI_SCENES.map((_, i) => String(i).padStart(2, '0'));
 
-export default function AnimeBankaiPortfolio(){
- const mount=useRef<HTMLDivElement>(null);const target=useRef(0);const activeRef=useRef(0);const [active,setActive]=useState(0);const [menu,setMenu]=useState(false);const [selected,setSelected]=useState<Bankai|null>(null);const current=BANKAIS[active];const ids=useMemo(()=>BANKAIS.map((_,i)=>String(i+1).padStart(2,'0')),[]);
- useEffect(()=>{
-  if(!mount.current)return;const root=mount.current;const scene=new THREE.Scene();const cam=new THREE.PerspectiveCamera(42,1,.1,160);cam.position.set(0,.25,10);
-  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;root.appendChild(renderer.domElement);
-  const resize=()=>{const w=root.clientWidth||innerWidth,h=root.clientHeight||innerHeight;cam.aspect=w/h;cam.updateProjectionMatrix();renderer.setSize(w,h,false)};resize();window.addEventListener('resize',resize);
-  scene.add(new THREE.HemisphereLight(0xbdd7ff,0x050507,1.25));const key=new THREE.DirectionalLight(0xffffff,2.1);key.position.set(4,8,7);scene.add(key);const stage=new THREE.Group();scene.add(stage);
-  const mat=(c:number,o=1)=>new THREE.MeshStandardMaterial({color:c,roughness:.32,metalness:.48,transparent:o<1,opacity:o,emissive:c,emissiveIntensity:.08});const glow=(c:number,o=.6)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
-  const outline=(m:THREE.Mesh)=>m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry,25),new THREE.LineBasicMaterial({color:0x030303,transparent:true,opacity:.82})));
-  const sword=(g:THREE.Group,c:number,scale=1)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.18,4.8,.08),mat(c));b.scale.setScalar(scale);b.rotation.z=-.08;outline(b);g.add(b);const q=new THREE.Mesh(new THREE.TorusGeometry(.34,.07,10,64),mat(0x14171a));q.position.y=-2.05*scale;g.add(q)};
-  const particles=(g:THREE.Group,c:number,n:number)=>{const geo=new THREE.BufferGeometry(),p=new Float32Array(n*3);for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=Math.pow(Math.random(),.45)*(2.5+Math.random()*4);p[i*3]=Math.cos(a)*r;p[i*3+1]=(Math.random()-.5)*7;p[i*3+2]=Math.sin(a)*r-2}geo.setAttribute('position',new THREE.BufferAttribute(p,3));g.add(new THREE.Points(geo,new THREE.PointsMaterial({color:c,size:.03,transparent:true,opacity:.7,depthWrite:false,blending:THREE.AdditiveBlending})))};
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(70,70,80,80),new THREE.MeshStandardMaterial({color:0x020408,roughness:.85,metalness:.1,wireframe:true,transparent:true,opacity:.24}));floor.rotation.x=-Math.PI/2;floor.position.y=-3.2;stage.add(floor);
-  for(let i=0;i<52;i++){const h=.5+Math.random()*5.5;const p=new THREE.Mesh(new THREE.BoxGeometry(.18+Math.random()*.6,h,.18+Math.random()*.6),new THREE.MeshStandardMaterial({color:0x0a1119,wireframe:true,transparent:true,opacity:.42}));p.position.set((Math.random()-.5)*30,-3.1+h/2,-7-Math.random()*42);stage.add(p)}
-  const stars=new THREE.BufferGeometry(),sp=new Float32Array(900*3);for(let i=0;i<900;i++){sp[i*3]=(Math.random()-.5)*42;sp[i*3+1]=(Math.random()-.5)*23;sp[i*3+2]=-Math.random()*65}stars.setAttribute('position',new THREE.BufferAttribute(sp,3));scene.add(new THREE.Points(stars,new THREE.PointsMaterial({color:0xdbe7ff,size:.018,transparent:true,opacity:.55})));
-  const hero=new THREE.Group();hero.position.set(0,-.3,.1);hero.rotation.z=-.12;hero.scale.setScalar(2.15);stage.add(hero);
-  // CC0 asset: BoQsc/cc0-melee-weapons-pack-glb/Katana/Katana.glb
-  new GLTFLoader().load('https://raw.githubusercontent.com/BoQsc/cc0-melee-weapons-pack-glb/main/Katana/Katana.glb',g=>{g.scene.traverse(o=>{const m=o as THREE.Mesh;if(m.isMesh)m.frustumCulled=true});hero.add(g.scene)},()=>{},()=>sword(hero,0xe9edf2));
-  const groups=BANKAIS.map((s,i)=>{const g=new THREE.Group();g.visible=i===0;g.position.set(3.5,0,-1);const halo=new THREE.Mesh(new THREE.TorusGeometry(2.2,.035,12,128),glow(s.accent,.8));halo.rotation.x=Math.PI/2;g.add(halo);const core=new THREE.Mesh(new THREE.IcosahedronGeometry(1.15,3),mat(s.accent,.88));core.scale.set(.8,1.25,.8);outline(core);g.add(core);particles(g,s.accent,i===4?900:260);if(i!==0)sword(g,s.accent,.8);stage.add(g);return g});
-  const onScroll=()=>{const max=Math.max(1,document.documentElement.scrollHeight-innerHeight);const exact=Math.min(1,Math.max(0,scrollY/max))*(BANKAIS.length-1);target.current=exact;const n=Math.min(BANKAIS.length-1,Math.round(exact));if(n!==activeRef.current){activeRef.current=n;setActive(n)}};window.addEventListener('scroll',onScroll,{passive:true});onScroll();
-  let raf=0;const tick=()=>{raf=requestAnimationFrame(tick);const t=target.current,local=t-activeRef.current;stage.position.x+=(Math.sin(t*.8)*.12-stage.position.x)*.06;stage.position.y+=(-local*.18-stage.position.y)*.06;stage.rotation.y+=((t-activeRef.current)*.045-stage.rotation.y)*.06;cam.position.x+=(local*.9-cam.position.x)*.06;cam.position.z+=(10-Math.abs(local)*.3-cam.position.z)*.06;groups.forEach((g,i)=>{const d=i-t;g.visible=Math.abs(d)<1.7;g.position.x=3.5+d*1.45;g.position.y=Math.sin(d)*.3;g.rotation.y=d*.15;g.scale.setScalar(Math.max(.55,1-Math.abs(d)*.22))});hero.rotation.y+=(local*.7-hero.rotation.y)*.07;hero.position.x+=(-local*.7-hero.position.x)*.07;renderer.render(scene,cam)};tick();
-  return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',resize);window.removeEventListener('scroll',onScroll);renderer.dispose();root.removeChild(renderer.domElement);scene.traverse(o=>{const m=o as THREE.Mesh;if(m.geometry)m.geometry.dispose();if(Array.isArray(m.material))m.material.forEach(x=>x.dispose());else if(m.material)m.material.dispose()})};
- },[]);
- useEffect(()=>{const html=document.documentElement;html.style.scrollBehavior='smooth';return()=>{html.style.scrollBehavior='auto'}},[]);
- const jump=(i:number)=>{setMenu(false);const max=Math.max(0,document.documentElement.scrollHeight-innerHeight);window.scrollTo({top:max*(i/(BANKAIS.length-1)),behavior:'smooth'})};
- return <main className="portfolio" style={{'--scene-accent':current.hex} as React.CSSProperties}><div className="webgl-stage" ref={mount}/><div className="anime-speedlines"/><div className="anime-ink"/><div className="vignette"/><div className="scanlines"/>
-  <header className="topbar"><a className="brand" href="#top">MUSAB<span>.</span>WAQAR</a><div className="system-label">BANKAI ARCHIVE <b>22 FORMS</b> · SCROLL-DRIVEN 3D</div><button className="menu-button" onClick={()=>setMenu(true)}>ARCHIVE <span>☰</span></button></header>
-  <aside className="rail"><span>01</span><div><i style={{height:`${((active+1)/BANKAIS.length)*100}%`}}/></div><span>22</span></aside><div className="chapter-count">{ids[active]} / 22</div><div className="progress-line"><i style={{width:`${(active/(BANKAIS.length-1))*100}%`}}/></div>
-  <div id="top" className="scroll-space">{BANKAIS.map((s,i)=><section className="bankai-section" key={s.name}><div className="section-inner"><div className="scene-copy"><div className="eyebrow">BANKAI ARCHIVE // {ids[i]} · {s.section}</div><h1>{s.name}</h1><div className="user-line">{s.user}</div><p>{s.purpose}</p><div className="command"><b>RELEASE</b>{s.command}</div><div className="ability"><b>ABILITY / PORTFOLIO TRANSLATION</b>{s.ability}</div><div className="actions"><button className="primary" onClick={()=>setSelected(s)}>OPEN PROJECT CORE ↗</button><button className="ghost" onClick={()=>jump(Math.min(i+1,21))}>NEXT BANKAI ↓</button></div></div><div className="project-panel"><div className="panel-kicker">ACTIVE FORM</div><h2>{s.section}</h2>{s.projects.map((p,j)=><button className="project-row" key={p} onClick={()=>setSelected({...s,purpose:p,ability:`${p} is represented here as a Bankai technique: measurable engineering impact, deliberate execution and visible transformation.`})}><span>0{j+1}</span><strong>{p}</strong><em>VIEW</em></button>)}<div className="tech-strip">{tech.slice((i*2)%tech.length,(i*2)%tech.length+6).map(t=><span key={t}>{t}</span>)}</div></div><div className="scroll-cue">SCROLL TO AWAKEN <span>↓</span></div></div></section>)}<section className="about-section"><div><div className="eyebrow">FINAL PORTAL // MUSAB WAQAR</div><h2>{profile.name}</h2><p>{profile.role}<br/>{profile.university}<br/>Graduating {profile.graduation}</p><p className="motto">“{profile.motto}”</p><div className="final-links"><a href="https://github.com/Musab-Waqar" target="_blank" rel="noreferrer">GITHUB</a><a href="https://musab-waqar-portfolio.vercel.app/" target="_blank" rel="noreferrer">PORTFOLIO</a><a href="https://www.linkedin.com/in/musab-waqar" target="_blank" rel="noreferrer">LINKEDIN</a><a href="mailto:musab@fast.edu">EMAIL</a></div></div></section></div>
-  {menu&&<div className="menu-overlay"><div className="menu-head"><span>BANKAI ARCHIVE / SELECT FORM</span><button onClick={()=>setMenu(false)}>CLOSE ×</button></div><div className="menu-grid">{BANKAIS.map((s,i)=><button key={s.name} className={i===active?'selected':''} onClick={()=>jump(i)}><small>{ids[i]}</small><b>{s.name}</b><span>{s.section}</span></button>)}</div></div>}
-  {selected&&<div className="modal-backdrop" onClick={()=>setSelected(null)}><article className="archive-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setSelected(null)}>×</button><div className="eyebrow">PROJECT CORE / {ids[active]}</div><h2>{selected.name}</h2><p>{selected.purpose}</p><p>{selected.ability}</p><div className="modal-tags">{selected.projects.map(x=><span key={x}>{x}</span>)}</div><div className="modal-links"><a href="https://github.com/Musab-Waqar" target="_blank" rel="noreferrer">EXPLORE GITHUB ↗</a><a href="https://musab-waqar-portfolio.vercel.app/" target="_blank" rel="noreferrer">VIEW PORTFOLIO ↗</a></div></article></div>}
- </main>;
+function clamp(n: number, a = 0, b = 1) { return Math.min(b, Math.max(a, n)); }
+
+function makeVisual(scene: BankaiScene, quality: number) {
+  const group = new THREE.Group();
+  const material = new THREE.MeshStandardMaterial({ color: scene.accent, roughness: 0.3, metalness: 0.58, emissive: scene.accent, emissiveIntensity: 0.12 });
+  const glow = new THREE.MeshBasicMaterial({ color: scene.accent, transparent: true, opacity: 0.48, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const outline = (mesh: THREE.Mesh) => mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 18), new THREE.LineBasicMaterial({ color: 0x020304, transparent: true, opacity: 0.78 })));
+
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.035, 10, 96), glow);
+  halo.rotation.x = Math.PI / 2;
+  group.add(halo);
+
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1.05, 2), material);
+  core.scale.set(0.9, 1.25, 0.9);
+  outline(core);
+  group.add(core);
+
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.16, 4.8, 0.07), material);
+  blade.position.set(0.05, -0.25, 0.2);
+  blade.rotation.z = -0.08;
+  blade.scale.setScalar(0.82);
+  outline(blade);
+  group.add(blade);
+
+  const particleCount = Math.max(70, Math.floor(quality * (scene.mode === 'petals' ? 520 : 230)));
+  const positions = new Float32Array(particleCount * 3);
+  const velocities = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.pow(Math.random(), 0.55) * (2.2 + Math.random() * 3.8);
+    positions[i * 3] = Math.cos(a) * r;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 6.5;
+    positions[i * 3 + 2] = Math.sin(a) * r - 1.5;
+    velocities[i * 3] = (Math.random() - 0.5) * 0.004;
+    velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.006;
+    velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.004;
+  }
+  const particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particleGeometry.userData.velocities = velocities;
+  const points = new THREE.Points(particleGeometry, new THREE.PointsMaterial({ color: scene.accent, size: scene.mode === 'petals' ? 0.032 : 0.024, transparent: true, opacity: 0.72, depthWrite: false, blending: THREE.AdditiveBlending }));
+  group.add(points);
+
+  if (scene.mode === 'giant') {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 4.6, 0.9), material);
+    body.position.y = 0.3; body.scale.set(1, 1.5, 1); outline(body); group.add(body);
+    for (const x of [-1.55, 1.55]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.55, 4.4, 0.55), material); arm.position.set(x, 0.25, 0); arm.rotation.z = x < 0 ? -0.18 : 0.18; group.add(arm); }
+  }
+  if (scene.mode === 'spear') { const spear = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 12, 12), glow); spear.rotation.z = Math.PI / 2; spear.position.z = -0.4; group.add(spear); }
+  if (scene.mode === 'fire' || scene.mode === 'berserk') { for (let i = 0; i < 5; i++) { const shard = new THREE.Mesh(new THREE.ConeGeometry(0.08 + i * 0.02, 2.8 + i * 0.45, 6), glow); shard.position.set((i - 2) * 0.6, 1 + i * 0.1, -0.2); shard.rotation.z = (i - 2) * 0.12; group.add(shard); } }
+  if (scene.mode === 'mirror') { const mirror = new THREE.Mesh(new THREE.OctahedronGeometry(1.65, 1), glow); mirror.scale.set(1, 0.08, 1); group.add(mirror); }
+  if (scene.mode === 'ice' || scene.mode === 'white') { for (let i = 0; i < 7; i++) { const shard = new THREE.Mesh(new THREE.ConeGeometry(0.05, 1.2 + Math.random() * 1.5, 5), glow); shard.position.set((Math.random() - 0.5) * 4, Math.random() * 3 - 1, (Math.random() - 0.5) * 2); shard.rotation.z = Math.random(); group.add(shard); } }
+  if (scene.mode === 'repair' || scene.mode === 'lab') { for (let i = 0; i < 8; i++) { const joint = new THREE.Mesh(new THREE.TorusGeometry(0.28 + i * 0.03, 0.035, 8, 32), material); joint.position.set((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, Math.random() * 1.5); joint.rotation.x = Math.random(); group.add(joint); } }
+  if (scene.mode === 'lightning') { for (let i = 0; i < 6; i++) { const bolt = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.8, 0.04), glow); bolt.position.set((i - 2.5) * 0.55, 1.2, 0); bolt.rotation.z = (Math.random() - 0.5) * 0.55; group.add(bolt); } }
+  if (scene.mode === 'portal' || scene.mode === 'final') { const outer = new THREE.Mesh(new THREE.TorusGeometry(2.9, 0.08, 12, 128), glow); outer.rotation.x = Math.PI / 2; group.add(outer); const inner = new THREE.Mesh(new THREE.CircleGeometry(2.65, 64), new THREE.MeshBasicMaterial({ color: 0x03050a, transparent: true, opacity: 0.78, side: THREE.DoubleSide })); inner.rotation.x = Math.PI / 2; group.add(inner); }
+
+  group.userData = { particles: points, baseAccent: scene.accent };
+  return group;
+}
+
+export default function AnimeBankaiPortfolio() {
+  const mount = useRef<HTMLDivElement>(null);
+  const targetScroll = useRef(0);
+  const targetMouse = useRef(new THREE.Vector2());
+  const smoothMouse = useRef(new THREE.Vector2());
+  const activeRef = useRef(0);
+  const [active, setActive] = useState(0);
+  const [menu, setMenu] = useState(false);
+  const [selected, setSelected] = useState<{ scene: BankaiScene; project?: string } | null>(null);
+  const [impact, setImpact] = useState(false);
+  const current = BANKAI_SCENES[active];
+  const reducedMotion = useRef(false);
+
+  const jump = (index: number) => {
+    const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo({ top: max * (index / (BANKAI_SCENES.length - 1)), behavior: reducedMotion.current ? 'auto' : 'smooth' });
+    setMenu(false);
+  };
+
+  useEffect(() => {
+    reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setSelected(null); setMenu(false); }
+      if (event.key === 'ArrowDown') { event.preventDefault(); jump(Math.min(activeRef.current + 1, BANKAI_SCENES.length - 1)); }
+      if (event.key === 'ArrowUp') { event.preventDefault(); jump(Math.max(activeRef.current - 1, 0)); }
+      if (event.key.toLowerCase() === 'r') { event.preventDefault(); jump(0); }
+      if (event.key === 'Enter' || event.key === ' ') { if (!selected && !menu) jump(Math.min(activeRef.current + 1, BANKAI_SCENES.length - 1)); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected, menu]);
+
+  useEffect(() => {
+    if (!mount.current) return;
+    const root = mount.current;
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(current.accent, 0.018);
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 140);
+    camera.position.set(0, 0.1, 9.5);
+    const renderer = new THREE.WebGLRenderer({ antialias: !reducedMotion.current, alpha: true, powerPreference: 'high-performance' });
+    const mobile = window.innerWidth < 700;
+    const quality = mobile ? 0.52 : window.innerWidth < 1200 ? 0.78 : 1;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.15 : 1.65));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    root.appendChild(renderer.domElement);
+
+    const resize = () => { const w = root.clientWidth || innerWidth; const h = root.clientHeight || innerHeight; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h, false); };
+    resize(); window.addEventListener('resize', resize);
+    const ambient = new THREE.HemisphereLight(0xa9c8ff, 0x030406, 1.15); scene.add(ambient);
+    const key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(4, 7, 6); scene.add(key);
+    const accentLight = new THREE.PointLight(current.accent, 8, 18); accentLight.position.set(2, 1, 4); scene.add(accentLight);
+    const world = new THREE.Group(); scene.add(world);
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60, 48, 48), new THREE.MeshStandardMaterial({ color: 0x020408, roughness: 0.9, metalness: 0.08, wireframe: true, transparent: true, opacity: 0.22 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -3.2; world.add(floor);
+    const city = new THREE.Group();
+    const buildingMaterial = new THREE.MeshBasicMaterial({ color: 0x16202a, wireframe: true, transparent: true, opacity: 0.38 });
+    for (let i = 0; i < 38; i++) { const h = 0.4 + Math.random() * 5; const b = new THREE.Mesh(new THREE.BoxGeometry(0.25 + Math.random() * 0.7, h, 0.25 + Math.random() * 0.7), buildingMaterial); b.position.set((Math.random() - 0.5) * 28, -3.05 + h / 2, -7 - Math.random() * 38); city.add(b); }
+    world.add(city);
+
+    const starsGeometry = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(620 * 3);
+    for (let i = 0; i < 620; i++) { starPositions[i * 3] = (Math.random() - 0.5) * 42; starPositions[i * 3 + 1] = (Math.random() - 0.5) * 24; starPositions[i * 3 + 2] = -Math.random() * 62; }
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const stars = new THREE.Points(starsGeometry, new THREE.PointsMaterial({ color: 0xdde8ff, size: 0.018, transparent: true, opacity: 0.56 })); scene.add(stars);
+
+    const visuals = BANKAI_SCENES.map((bankai) => { const visual = makeVisual(bankai, quality); world.add(visual); return visual; });
+
+    const onScroll = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      targetScroll.current = clamp(scrollY / max) * (BANKAI_SCENES.length - 1);
+      const next = Math.min(BANKAI_SCENES.length - 1, Math.round(targetScroll.current));
+      if (next !== activeRef.current) { activeRef.current = next; setActive(next); setImpact(true); window.setTimeout(() => setImpact(false), 120); }
+    };
+    const onPointer = (event: PointerEvent) => { targetMouse.current.x = (event.clientX / innerWidth) * 2 - 1; targetMouse.current.y = -(event.clientY / innerHeight) * 2 + 1; };
+    window.addEventListener('scroll', onScroll, { passive: true }); window.addEventListener('pointermove', onPointer, { passive: true }); onScroll();
+
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const t = targetScroll.current;
+      smoothMouse.current.lerp(targetMouse.current, reducedMotion.current ? 0.2 : 0.055);
+      const sceneIndex = Math.round(t);
+      const bankai = BANKAI_SCENES[sceneIndex];
+      const local = t - sceneIndex;
+      scene.fog = new THREE.FogExp2(bankai.accent, mobile ? 0.024 : 0.017);
+      accentLight.color.setHex(bankai.accent);
+      accentLight.position.x += (smoothMouse.current.x * 4 - accentLight.position.x) * 0.04;
+      accentLight.position.y += (1 + smoothMouse.current.y * 3 - accentLight.position.y) * 0.04;
+      camera.position.x += (smoothMouse.current.x * 0.7 + local * 0.75 - camera.position.x) * 0.045;
+      camera.position.y += (-smoothMouse.current.y * 0.35 + Math.sin(t * 0.8) * 0.08 - camera.position.y) * 0.045;
+      camera.position.z += (9.5 - Math.abs(local) * 0.9 - camera.position.z) * 0.045;
+      world.rotation.y += (smoothMouse.current.x * 0.055 - world.rotation.y) * 0.035;
+      world.rotation.x += (-smoothMouse.current.y * 0.025 - world.rotation.x) * 0.035;
+      city.position.x += (-smoothMouse.current.x * 0.35 - city.position.x) * 0.03;
+      stars.position.x += (-smoothMouse.current.x * 0.15 - stars.position.x) * 0.025;
+
+      visuals.forEach((visual, i) => {
+        const d = i - t;
+        const proximity = clamp(1 - Math.abs(d) / 1.55);
+        visual.visible = Math.abs(d) < 1.65;
+        visual.position.x += (d * 2.8 - visual.position.x) * 0.055;
+        visual.position.y += (Math.sin(d * 1.7) * 0.35 - visual.position.y) * 0.055;
+        visual.position.z += ((1 - proximity) * -1.5 - visual.position.z) * 0.055;
+        visual.scale.setScalar(0.58 + proximity * 0.95);
+        visual.rotation.y += ((d * 0.22) + smoothMouse.current.x * 0.18 - visual.rotation.y) * 0.05;
+        visual.rotation.z += ((bankai.mode === 'invert' ? local * 0.6 : 0) - visual.rotation.z) * 0.04;
+        const points = visual.userData.particles as THREE.Points;
+        points.rotation.y += 0.0015 + proximity * 0.0025;
+        const geo = points.geometry as THREE.BufferGeometry;
+        const pos = geo.attributes.position as THREE.BufferAttribute;
+        const vel = geo.userData.velocities as Float32Array;
+        if (!reducedMotion.current) {
+          for (let p = 0; p < pos.count; p++) {
+            const base = p * 3;
+            pos.array[base] += vel[base]; pos.array[base + 1] += vel[base + 1]; pos.array[base + 2] += vel[base + 2];
+            if (pos.array[base + 1] > 3.5) pos.array[base + 1] = -3.5;
+            if (pos.array[base + 1] < -3.5) pos.array[base + 1] = 3.5;
+          }
+          pos.needsUpdate = true;
+        }
+      });
+      renderer.render(scene, camera);
+    };
+    tick();
+    return () => {
+      cancelAnimationFrame(raf); window.removeEventListener('resize', resize); window.removeEventListener('scroll', onScroll); window.removeEventListener('pointermove', onPointer);
+      renderer.dispose();
+      scene.traverse((object) => { const mesh = object as THREE.Mesh; if (mesh.geometry) mesh.geometry.dispose(); const material = mesh.material; if (Array.isArray(material)) material.forEach((m) => m.dispose()); else if (material) material.dispose(); });
+      if (root.contains(renderer.domElement)) root.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  const openProject = (scene: BankaiScene, project?: string) => setSelected({ scene, project });
+  const projectForScene = (scene: BankaiScene) => PROJECTS.find((p) => scene.projects.some((tag) => p.name.toLowerCase().includes(tag.toLowerCase().split(' ')[0]))) || PROJECTS[0];
+
+  return (
+    <main className="portfolio" style={{ '--scene-accent': current.hex } as React.CSSProperties}>
+      <div className="webgl-stage" ref={mount} aria-hidden="true" />
+      <div className="anime-speedlines" aria-hidden="true" /><div className="anime-ink" aria-hidden="true" /><div className="vignette" aria-hidden="true" /><div className="scanlines" aria-hidden="true" />
+      {impact && !reducedMotion.current && <div className="impact-frame" aria-hidden="true" />}
+      <header className="topbar">
+        <a className="brand" href="#top" aria-label="Musab Waqar home">MUSAB<span>.</span>WAQAR</a>
+        <div className="system-label">BANKAI ARCHITECT <b>23 FORMS</b> · SCROLL-DRIVEN 3D</div>
+        <button className="menu-button" onClick={() => setMenu(true)} aria-label="Open Bankai archive">ARCHIVE <span>☰</span></button>
+      </header>
+      <aside className="rail" aria-label="Portfolio progress"><span>00</span><div><i style={{ height: `${((active + 1) / BANKAI_SCENES.length) * 100}%` }} /></div><span>22</span></aside>
+      <div className="chapter-count" aria-live="polite">{ids[active]} / 22</div>
+      <div className="progress-line" aria-hidden="true"><i style={{ width: `${(active / (BANKAI_SCENES.length - 1)) * 100}%` }} /></div>
+
+      <div id="top" className="scroll-space">
+        {BANKAI_SCENES.map((s, i) => {
+          const linked = projectForScene(s);
+          return (
+            <section className="bankai-section" key={s.name} aria-labelledby={`bankai-${i}`}>
+              <div className="section-inner">
+                <div className="scene-copy">
+                  <div className="eyebrow">BANKAI ARCHIVE // {ids[i]} · {s.theme}</div>
+                  <h1 id={`bankai-${i}`}>{s.name}</h1>
+                  <div className="user-line">{s.user}</div>
+                  <p>{s.purpose}</p>
+                  <div className="command"><b>RELEASE</b>{s.command}</div>
+                  <div className="ability"><b>PORTFOLIO TRANSLATION</b>{s.ability}</div>
+                  <div className="actions">
+                    <button className="primary" onClick={() => openProject(s, linked.name)}>OPEN PROJECT CORE ↗</button>
+                    <button className="ghost" onClick={() => jump(Math.min(i + 1, BANKAI_SCENES.length - 1))}>NEXT BANKAI ↓</button>
+                  </div>
+                </div>
+                <div className="project-panel">
+                  <div className="panel-kicker">ACTIVE FORM / PROFESSIONAL CAPABILITY</div>
+                  <h2>{s.theme}</h2>
+                  {s.projects.map((p, j) => <button className="project-row" key={p} onClick={() => openProject(s, p)}><span>{String(j + 1).padStart(2, '0')}</span><strong>{p}</strong><em>VIEW</em></button>)}
+                  <div className="tech-strip">{TECH.slice((i * 2) % TECH.length, (i * 2) % TECH.length + 6).map((tech) => <span key={tech}>{tech}</span>)}</div>
+                  {i === 0 && <div className="tech-strip"><span>{PROFILE.role}</span><span>{PROFILE.graduation}</span></div>}
+                  {i === 22 && <div className="tech-strip">{EXPERIENCE.slice(0, 3).map((item) => <span key={item}>{item}</span>)}</div>}
+                </div>
+                <div className="scroll-cue">SCROLL TO AWAKEN <span>↓</span></div>
+              </div>
+            </section>
+          );
+        })}
+        <section className="about-section" aria-labelledby="about-musab">
+          <div>
+            <div className="eyebrow">FINAL PORTAL // NEXT ARC</div>
+            <h2 id="about-musab">{PROFILE.name}</h2>
+            <p>{PROFILE.role}<br />{PROFILE.education}<br />{PROFILE.graduation}</p>
+            <p className="motto">“{PROFILE.motto}”</p>
+            <p>Backend Engineer · AI Developer · Systems Researcher</p>
+            <div className="final-links">
+              <a href="https://github.com/Musab-Waqar" target="_blank" rel="noreferrer">GITHUB</a>
+              <a href="https://musab-waqar-portfolio.vercel.app/" target="_blank" rel="noreferrer">OLDER PORTFOLIO</a>
+              <a href="https://www.linkedin.com/in/musab-waqar" target="_blank" rel="noreferrer">LINKEDIN</a>
+              <a href="mailto:musab@fast.edu">EMAIL</a>
+              <button onClick={() => openProject(BANKAI_SCENES[22])}>PROJECT ARCHIVE</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {menu && <div className="menu-overlay" role="dialog" aria-modal="true" aria-label="Bankai archive">
+        <div className="menu-head"><span>BANKAI ARCHIVE / SELECT FORM</span><button onClick={() => setMenu(false)} aria-label="Close archive">CLOSE ×</button></div>
+        <div className="menu-grid">{BANKAI_SCENES.map((s, i) => <button key={s.name} className={i === active ? 'selected' : ''} onClick={() => jump(i)}><small>{ids[i]}</small><b>{s.name}</b><span>{s.theme}</span></button>)}</div>
+      </div>}
+
+      {selected && <div className="modal-backdrop" onClick={() => setSelected(null)}>
+        <article className="archive-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="project-title">
+          <button className="modal-close" onClick={() => setSelected(null)} aria-label="Close project">×</button>
+          <div className="eyebrow">PROJECT CORE / BANKAI {String(selected.scene.id).padStart(2, '0')}</div>
+          <h2 id="project-title">{selected.project || selected.scene.name}</h2>
+          <p>{selected.scene.purpose}</p>
+          <p>{selected.scene.ability}</p>
+          <div className="modal-tags">{selected.scene.projects.map((tag) => <span key={tag}>{tag}</span>)}</div>
+          {(() => { const p = PROJECTS.find((item) => item.name === selected.project); return p ? <><p><strong>{p.status}</strong> · {p.description}</p><div className="modal-tags">{p.stack.map((item) => <span key={item}>{item}</span>)}</div><div className="modal-links"><a href={p.url} target="_blank" rel="noreferrer">OPEN REPOSITORY ↗</a></div></> : <div className="modal-links"><a href="https://github.com/Musab-Waqar" target="_blank" rel="noreferrer">EXPLORE GITHUB ↗</a></div>; })()}
+        </article>
+      </div>}
+    </main>
+  );
 }
