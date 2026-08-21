@@ -1,25 +1,35 @@
-# MUSABWAQAR — SYSTEMS IN MOTION
+# MUSABWAQAR // SYSTEMS IN MOTION
 
-Immersive 3D portfolio built with Next.js, Three.js and GSAP. The visual language is anime-inspired, using Bankai-style transformations as a metaphor for moving through projects, skills, experience and contact.
+An immersive Three.js portfolio experience inspired by the visual language of Bleach: spiritual pressure, Zanpakutō archives, cinematic transitions, and a six-scene navigation system.
 
-## Run locally
+## Stack
+
+- Next.js 14 + React 18 + TypeScript
+- Three.js for the animated 3D world
+- GSAP for scene transitions
+- CSS-driven cinematic UI, scanlines, grain and responsive layouts
+
+## Experience
+
+1. Bankai Gateway — identity and philosophy
+2. Zanpakutō Archive — selected systems/projects
+3. Espada Index — technical universe and five power levels
+4. Senbonzakura — experience timeline
+5. Zanka no Tachi — collaboration/contact
+6. Final Form — closing identity and links
+
+## Controls
+
+- Mouse movement: steer the 3D atmosphere
+- Wheel / Page Up / Page Down / Arrow keys: change scene
+- Scene dots: jump directly
+- Menu: open the full scene index
+
+## Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
-
-## Scenes
-
-1. Bankai Gateway — hero / identity
-2. Zanpakutō Archive — projects
-3. Espada Index — technical universe
-4. Senbonzakura — experience
-5. Zanka no Tachi — contact
-6. Final Form — social / closing statement
-
-## Notes
-
-The implementation uses procedural Three.js geometry and particles rather than copyrighted anime assets. Replace the placeholder social/contact links with your real profiles before deployment.
+Build for production with `npm run build`.
