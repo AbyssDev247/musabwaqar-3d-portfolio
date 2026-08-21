@@ -1,5 +1,11 @@
 import AnimeBankaiPortfolio from './AnimeBankaiPortfolio';
+import BankaiInstancedBackground from './BankaiInstancedBackground';
 
 export default function Home() {
-  return <AnimeBankaiPortfolio />;
+  return (
+    <>
+      <BankaiInstancedBackground />
+      <AnimeBankaiPortfolio />
+    </>
+  );
 }
